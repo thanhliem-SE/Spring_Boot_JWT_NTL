@@ -43,4 +43,18 @@ public class AuthController {
                 .body("Account or password is not valid!");
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody User user){
+        UserPrincipal userPrincipal = userService.findByUsername(user.getUsername());
+        if(userPrincipal == null || !new BCryptPasswordEncoder().matches(user.getPassword(), userPrincipal.getPassword())){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Account or password is not valid!");
+        }
+        Token token = new Token();
+        token.setToken(jwtUtil.generateToken(userPrincipal));
+        token.setTokenExpDate(jwtUtil.generateExpirationDate());
+        tokenService.createToken(token);
+
+        return  ResponseEntity.ok(token.getToken());
+    }
+
 }
